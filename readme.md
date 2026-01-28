@@ -32,12 +32,25 @@ docker run --name jenkins-blueocean --restart=on-failure --detach \
 
 ### Windows
 ```
+# 1. Create Jenkins network
+docker network create jenkins
+
+# 2. Run Docker DinD container
+docker run --name docker --rm --detach `
+  --privileged --network jenkins --network-alias docker `
+  --volume jenkins-docker-certs:/certs/client `
+  docker:dind --storage-driver overlay2 --tlsverify --tlscacert=/certs/client/ca.pem --tlscert=/certs/client/cert.pem --tlskey=/certs/client/key.pem
+
+# 3. Run Jenkins Blue Ocean container
 docker run --name jenkins-blueocean --restart=on-failure --detach `
   --network jenkins --env DOCKER_HOST=tcp://docker:2376 `
   --env DOCKER_CERT_PATH=/certs/client --env DOCKER_TLS_VERIFY=1 `
   --volume jenkins-data:/var/jenkins_home `
   --volume jenkins-docker-certs:/certs/client:ro `
-  --publish 8080:8080 --publish 50000:50000 myjenkins-blueocean:2.414.2
+  --publish 8080:8080 --publish 50000:50000 jenkins/jenkins:2.548-jdk25
+
+# 4. Show container status
+docker ps
 ```
 
 
